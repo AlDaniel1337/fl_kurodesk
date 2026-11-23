@@ -86,42 +86,43 @@ class _HomePageState extends State<HomePage>  {
               final bloc = context.read<WorkspaceBloc>();
               final groups = state.groups;
               groupName = state.activeGroup?.name ?? '';
+
+              if (_isMini) {
+                return MiniGroupPill(
+                  key: const ValueKey('mini'),
+                  groupName: groupName,
+                  windowCount: activeGroup?.windows.length ?? 0,
+                  onExpand: () => _setNormalMode(),
+                  onQuickSwitch: () => bloc.add(ToggleQuickSwitchEvent()),
+                  quickTarget: state.quickSwitchTarget,
+                );
+              }
         
-              return AnimatedSwitcher(
-                duration: const Duration(milliseconds: 100),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
-                child: _isMini
-                    ? MiniGroupPill(
-                        key: const ValueKey('mini'),
-                        groupName: groupName,
-                        windowCount: activeGroup?.windows.length ?? 0,
-                        onExpand: () => _setNormalMode(),
-                      )
-                    : Container(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 12, 4),
-                      child: _ExpandedContent(
-                          key: const ValueKey('expanded'),
-                          state: state,
-                          isSelecting: _isSelecting,
-                          onAddGroup: () {
-                            _onGroupsChange(groups.length + 1);
-                            bloc.add(CreateWorkspaceGroupEvent());
-                          },
-                          onToggleSelector: () => _toggleSelector(context),
-                          onSelectGroup: (id) => bloc.add(ActivateWorkspaceGroupEvent(id)),
-                          onToggleWindow: (w) => bloc.add(ToggleWindowInGroupEvent(w)),
-                          onRefresh: () => bloc.add(RefreshOpenWindowsEvent()),
-                          onMinimizeActive: () => _setMiniMode(),
-                          onDeleteGroup: () {
-                            final activeGroup = state.activeGroup;
-                            if (activeGroup != null && state.groups.length > 1) {
-                              _onGroupsChange(groups.length - 1);
-                              context.read<WorkspaceBloc>().add(DeleteWorkspaceGroupEvent(activeGroup.id));
-                            }
-                          },
-                        ),
-                    ),
+              return Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 12, 4),
+                child: _ExpandedContent(
+                    key: const ValueKey('expanded'),
+                    state: state,
+                    isSelecting: _isSelecting,
+                    onAddGroup: () {
+                      _onGroupsChange(groups.length + 1);
+                      bloc.add(CreateWorkspaceGroupEvent());
+                    },
+                    onToggleSelector: () => _toggleSelector(context),
+                    onSelectGroup: (id) => bloc.add(ActivateWorkspaceGroupEvent(id)),
+                    onToggleWindow: (w) => bloc.add(ToggleWindowInGroupEvent(w)),
+                    onRefresh: () => bloc.add(RefreshOpenWindowsEvent()),
+                    onMinimizeActive: () => _setMiniMode(),
+                    onDeleteGroup: () {
+                      final activeGroup = state.activeGroup;
+                      if (activeGroup != null && state.groups.length > 1) {
+                        _onGroupsChange(groups.length - 1);
+                        context.read<WorkspaceBloc>().add(DeleteWorkspaceGroupEvent(activeGroup.id));
+                      }
+                    },
+                    onTogglePin: (id) => bloc.add(TogglePinWorkspaceGroupEvent(id)),
+                    pinnedGroupId: state.pinnedGroup?.id,
+                  ),
               );
             },
           ),
@@ -141,6 +142,8 @@ class _ExpandedContent extends StatelessWidget {
   final VoidCallback onRefresh;
   final VoidCallback onMinimizeActive;
   final VoidCallback onDeleteGroup;
+  final ValueChanged<String> onTogglePin;
+  final String? pinnedGroupId;
 
   const _ExpandedContent({
     super.key,
@@ -153,6 +156,8 @@ class _ExpandedContent extends StatelessWidget {
     required this.onRefresh,
     required this.onMinimizeActive,
     required this.onDeleteGroup,
+    required this.pinnedGroupId,
+    required this.onTogglePin,
   });
 
   @override
@@ -209,6 +214,8 @@ class _ExpandedContent extends StatelessWidget {
               onReorder: (oldIndex, newIndex) => context.read<WorkspaceBloc>().add(
                 ReorderWorkspaceGroupsEvent(oldIndex: oldIndex, newIndex: newIndex),
               ),
+              onTogglePin: onTogglePin,
+              pinnedGroupId: pinnedGroupId,
             ),
             const Spacer(),
             

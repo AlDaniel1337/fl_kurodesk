@@ -23,6 +23,8 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     on<RenameWorkspaceGroupEvent>(_onRenameGroup);
     on<DeleteWorkspaceGroupEvent>(_onDeleteGroup);
     on<ReorderWorkspaceGroupsEvent>(_onReorderGroups);
+    on<TogglePinWorkspaceGroupEvent>(_onTogglePinGroup);
+    on<ToggleQuickSwitchEvent>(_onToggleQuickSwitch);
   }
 
   void _onRefreshWindows(RefreshOpenWindowsEvent event, Emitter<WorkspaceState> emit) {
@@ -127,7 +129,12 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         ? updatedGroups[(index - 1).clamp(0, updatedGroups.length - 1)].id
         : state.activeGroupId;
 
-    emit(state.copyWith(groups: updatedGroups, activeGroupId: nextActiveId));
+    emit(state.copyWith(
+      groups: updatedGroups, 
+      activeGroupId: nextActiveId,
+      clearPinned: state.pinnedGroupId == event.groupId,
+      clearPrevious: state.previousGroupId == event.groupId,
+    ));
   }
 
   void _onReorderGroups(ReorderWorkspaceGroupsEvent event, Emitter<WorkspaceState> emit) {
@@ -140,5 +147,34 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     updatedGroups.insert(newIndex, item);
 
     emit(state.copyWith(groups: updatedGroups));
+  }
+
+  void _onTogglePinGroup(TogglePinWorkspaceGroupEvent event, Emitter<WorkspaceState> emit) {
+    final isAlreadyPinned = state.pinnedGroupId == event.groupId;
+    emit(state.copyWith(
+      pinnedGroupId: isAlreadyPinned ? null : event.groupId,
+      clearPinned: isAlreadyPinned,
+    ));
+  }
+
+  void _onToggleQuickSwitch(
+    ToggleQuickSwitchEvent event,
+    Emitter<WorkspaceState> emit,
+  ) {
+    final targetInfo = state.quickSwitchTarget;
+    if (targetInfo == null) return;
+
+    final currentId = state.activeGroupId;
+    final nextId = targetInfo.group.id;
+
+    // Si saltamos hacia el grupo fijado, recordamos dónde estábamos;
+    // si estamos regresando al grupo anterior, limpiamos previousGroupId.
+    final nextPreviousId = targetInfo.isReturning ? null : currentId;
+
+    add(ActivateWorkspaceGroupEvent(nextId));
+    emit(state.copyWith(
+      previousGroupId: nextPreviousId,
+      clearPrevious: targetInfo.isReturning,
+    ));
   }
 }

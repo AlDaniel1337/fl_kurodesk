@@ -65,3 +65,13 @@ class ReorderWorkspaceGroupsEvent extends WorkspaceEvent {
   @override
   List<Object?> get props => [oldIndex, newIndex];
 }
+
+class TogglePinWorkspaceGroupEvent extends WorkspaceEvent {
+  final String groupId;
+  const TogglePinWorkspaceGroupEvent(this.groupId);
+
+  @override
+  List<Object?> get props => [groupId];
+}
+
+class ToggleQuickSwitchEvent extends WorkspaceEvent {}

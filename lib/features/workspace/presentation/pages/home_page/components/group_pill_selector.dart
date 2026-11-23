@@ -4,14 +4,18 @@ import 'package:kurodesk/features/workspace/domain/entities/workspace_group.dart
 class GroupPillSelector extends StatelessWidget {
   final List<WorkspaceGroup> groups;
   final String? activeGroupId;
+  final String? pinnedGroupId;
   final ValueChanged<String> onSelectGroup;
+  final ValueChanged<String> onTogglePin;
   final void Function(int oldIndex, int newIndex) onReorder;
 
   const GroupPillSelector({
     super.key,
     required this.groups,
     required this.activeGroupId,
+    required this.pinnedGroupId,
     required this.onSelectGroup,
+    required this.onTogglePin,
     required this.onReorder,
   });
 
@@ -49,8 +53,10 @@ class GroupPillSelector extends StatelessWidget {
             index: index,
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 4),
+
               child: GestureDetector(
                 onTap: () => onSelectGroup(group.id),
+                onSecondaryTap: () => onTogglePin(group.id),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
                   constraints: const BoxConstraints(minWidth: 68, minHeight: 40),
@@ -82,6 +88,14 @@ class GroupPillSelector extends StatelessWidget {
                           fontSize: 11,
                         ),
                       ),
+                      if (group.id == pinnedGroupId) ...[
+                        const SizedBox(width: 5),
+                        const Icon(
+                          Icons.push_pin_rounded,
+                          size: 12,
+                          color: Color(0xFF64B5F6),
+                        ),
+                      ],
                     ],
                   ),
                 ),

@@ -72,9 +72,9 @@ class WindowManagerPlugin {
   
   /// Sets the window to mini mode based on the group name.
   static Future<void> setMiniMode(String groupName) async {
-    await windowManager.setOpacity(0.50);
+    await windowManager.setOpacity(0.80);
     
-    double width = (groupName.length * 16.0) + 20;
+    double width = (groupName.length * 18.0) + 20;
 
     await windowManager.setMinimumSize(Size(width, _miniSize.height));
     await windowManager.setSize(Size(width, _miniSize.height), animate: true);
