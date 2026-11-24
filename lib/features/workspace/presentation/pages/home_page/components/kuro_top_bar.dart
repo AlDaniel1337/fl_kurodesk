@@ -6,7 +6,9 @@ class KuroTopBar extends StatefulWidget {
   final VoidCallback onAddGroup;
   final VoidCallback onOpenSelector;
   final VoidCallback onMinimizeActive;
+  final VoidCallback onToggleAutoMini;
   final bool isSelecting;
+  final bool isAutoMiniEnabled;
 
   const KuroTopBar({
     super.key,
@@ -14,6 +16,8 @@ class KuroTopBar extends StatefulWidget {
     required this.isSelecting,
     required this.onAddGroup,
     required this.onMinimizeActive,
+    required this.onToggleAutoMini,
+    required this.isAutoMiniEnabled,
   });
 
   @override
@@ -24,6 +28,9 @@ class _KuroTopBarState extends State<KuroTopBar> {
 
   @override
   Widget build(BuildContext context) {
+
+    double iconSpacing = 5;
+
     return CustomDragToMoveArea(
       child: Row(
         children: [
@@ -32,12 +39,19 @@ class _KuroTopBarState extends State<KuroTopBar> {
             tooltip: 'Minimizar',
             onTap: () => widget.onMinimizeActive(),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: iconSpacing),
           _TopIcon(
             icon: Icons.tune_rounded,
             isActive: widget.isSelecting,
             tooltip: 'Asignar ventanas al grupo',
             onTap: widget.onOpenSelector,
+          ),
+          SizedBox(width: iconSpacing),
+          _TopIcon(
+            icon: Icons.auto_fix_high,
+            isActive: widget.isAutoMiniEnabled,
+            tooltip: 'Auto Mini',
+            onTap: widget.onToggleAutoMini,
           ),
 
           const Spacer(),

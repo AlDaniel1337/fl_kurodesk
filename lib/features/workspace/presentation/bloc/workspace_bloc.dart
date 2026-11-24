@@ -28,8 +28,12 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
   }
 
   void _onRefreshWindows(RefreshOpenWindowsEvent event, Emitter<WorkspaceState> emit) {
+    final cleanedGroups = _purgeClosedWindows(state.groups);
     final windows = _win32.getOpenWindows();
-    emit(state.copyWith(openWindows: windows));
+    emit(state.copyWith(
+      groups: cleanedGroups,
+      openWindows: windows,
+    ));
   }
 
   void _onCreateGroup(CreateWorkspaceGroupEvent event, Emitter<WorkspaceState> emit) {
@@ -47,7 +51,10 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
 
   void _onActivateGroup(ActivateWorkspaceGroupEvent event, Emitter<WorkspaceState> emit) {
     final cleanedGroups = _purgeClosedWindows(state.groups);
-    final target = cleanedGroups.firstWhere((g) => g.id == event.groupId);
+    final target = cleanedGroups.firstWhere(
+      (g) => g.id == event.groupId,
+      orElse: () => cleanedGroups.first,
+    );
     final targetHwnds = target.windows.map((w) => w.hwnd).toSet();
 
     // Minimizar ventanas de los demás grupos (si no están compartidas con el activo)
@@ -65,7 +72,11 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
       _win32.restoreAndFocusWindow(win.hwnd);
     }
 
-    emit(state.copyWith(groups: cleanedGroups, activeGroupId: target.id));
+    emit(state.copyWith(
+      groups: cleanedGroups,
+      activeGroupId: target.id,
+      clearPrevious: state.previousGroupId == target.id,
+    ));
   }
 
   void _onToggleWindow(ToggleWindowInGroupEvent event, Emitter<WorkspaceState> emit) {
@@ -85,19 +96,25 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
   }
 
   void _onMinimizeActive(MinimizeActiveGroupEvent event, Emitter<WorkspaceState> emit) {
-    final active = state.activeGroup;
+    final cleanedGroups = _purgeClosedWindows(state.groups);
+    final active = cleanedGroups.where((g) => g.id == state.activeGroupId).firstOrNull;
     if (active == null) return;
+
     for (final win in active.windows) {
       _win32.minimizeWindow(win.hwnd);
     }
+    emit(state.copyWith(groups: cleanedGroups));
   }
 
   void _onRestoreActive(RestoreActiveGroupEvent event, Emitter<WorkspaceState> emit) {
-    final active = state.activeGroup;
+    final cleanedGroups = _purgeClosedWindows(state.groups);
+    final active = cleanedGroups.where((g) => g.id == state.activeGroupId).firstOrNull;
     if (active == null) return;
+
     for (final win in active.windows) {
       _win32.restoreAndFocusWindow(win.hwnd);
     }
+    emit(state.copyWith(groups: cleanedGroups));
   }
 
   List<WorkspaceGroup> _purgeClosedWindows(List<WorkspaceGroup> groups) {

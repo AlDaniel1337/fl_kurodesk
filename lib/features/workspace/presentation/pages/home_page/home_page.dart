@@ -19,6 +19,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>  {
 
   bool _isSelecting = false;
+  bool _isAutoMiniEnabled = false;
   bool _isMini = false;
   String groupName = 'A';
 
@@ -60,6 +61,12 @@ class _HomePageState extends State<HomePage>  {
     } else {
       _onGroupsChange(context.read<WorkspaceBloc>().state.groups.length);
     }
+  }
+
+  Future<void> _toggleAutoMini() async {
+    setState(() {
+      _isAutoMiniEnabled = !_isAutoMiniEnabled;
+    });
   }
 
   @override
@@ -122,6 +129,8 @@ class _HomePageState extends State<HomePage>  {
                     },
                     onTogglePin: (id) => bloc.add(TogglePinWorkspaceGroupEvent(id)),
                     pinnedGroupId: state.pinnedGroup?.id,
+                    onToggleAutoMini: () => _toggleAutoMini(),
+                    isAutoMiniEnabled: _isAutoMiniEnabled,
                   ),
               );
             },
@@ -135,8 +144,10 @@ class _HomePageState extends State<HomePage>  {
 class _ExpandedContent extends StatelessWidget {
   final WorkspaceState state;
   final bool isSelecting;
+  final bool isAutoMiniEnabled;
   final VoidCallback onAddGroup;
   final VoidCallback onToggleSelector;
+  final VoidCallback onToggleAutoMini;
   final ValueChanged<String> onSelectGroup;
   final ValueChanged<dynamic> onToggleWindow;
   final VoidCallback onRefresh;
@@ -158,6 +169,8 @@ class _ExpandedContent extends StatelessWidget {
     required this.onDeleteGroup,
     required this.pinnedGroupId,
     required this.onTogglePin,
+    required this.onToggleAutoMini,
+    required this.isAutoMiniEnabled,
   });
 
   @override
@@ -172,12 +185,18 @@ class _ExpandedContent extends StatelessWidget {
       ],
       child: Column(
         children: [
+
+          //: Top bar with controls for the workspace
           KuroTopBar(
             isSelecting: isSelecting,
             onOpenSelector: onToggleSelector,
             onAddGroup: onAddGroup,
             onMinimizeActive: onMinimizeActive,
+            onToggleAutoMini: onToggleAutoMini,
+            isAutoMiniEnabled: isAutoMiniEnabled,
           ),
+
+          //: Window selector view for the active group when selecting windows
           if (isSelecting && activeGroup != null)
             WindowSelectorView(
               groupName: activeGroup.name,
@@ -187,9 +206,12 @@ class _ExpandedContent extends StatelessWidget {
               onRefresh: onRefresh,
               onDone: onToggleSelector,
             )
+          
+          //: Content for the active group when not selecting windows
           else ...[
-            //: Title of the active group or placeholder text if no group is active
             const Spacer(),
+
+            //: Editable title for the active group or placeholder text if no group is active
             if (activeGroup != null)
               EditableGroupTitle(
                 title: activeGroup.name,
@@ -207,10 +229,16 @@ class _ExpandedContent extends StatelessWidget {
               ),
             const SizedBox(height: 14),
 
+            //: Group pill selector for switching between workspace groups
             GroupPillSelector(
               groups: state.groups,
               activeGroupId: activeGroup?.id,
-              onSelectGroup: onSelectGroup,
+              onSelectGroup: (activeGroup) {
+                onSelectGroup(activeGroup);
+                if(isAutoMiniEnabled){
+                  onMinimizeActive();
+                } 
+              },
               onReorder: (oldIndex, newIndex) => context.read<WorkspaceBloc>().add(
                 ReorderWorkspaceGroupsEvent(oldIndex: oldIndex, newIndex: newIndex),
               ),
@@ -269,14 +297,12 @@ class _BottomControls extends StatelessWidget {
 class _CircleBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  final double size;
   final String? tooltip;
 
   const _CircleBtn({
     required this.icon, 
     required this.onTap, 
     this.tooltip, 
-    this.size = 18,
   });
 
   @override
@@ -290,7 +316,7 @@ class _CircleBtn extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: const BoxDecoration(color: Color(0xFF1C1C1C), shape: BoxShape.circle),
-          child: Icon(icon, color: Colors.white, size: size),
+          child: Icon(icon, color: Colors.white, size: 18),
         ),
       ),
     );

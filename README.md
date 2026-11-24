@@ -1,17 +1,27 @@
-# kurodesk
+# Kurodesk
 
-A new Flutter project.
+**Kurodesk** es un gestor minimalista de espacios de trabajo para Windows construido con **Flutter** y llamadas nativas a la **API Win32**. Inspirado en una barra flotante tipo *Dynamic Island*, permite agrupar ventanas activas por contexto de trabajo, alternar entre grupos con un clic y minimizar o restaurar conjuntos completos de aplicaciones al instante.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## Características principales
 
-A few resources to get you started if this is your first Flutter project:
+- **Grupos de ventanas personalizados:** Crea, renombra (doble clic sobre el título), reordena mediante arrastrar y soltar (*drag & drop*) y elimina espacios de trabajo según tu flujo (por ejemplo: `BLENDER`, `CODE`, `REFS`).
+- **Modo Mini adaptativo:** Al hacer clic fuera de la ventana, **Kurodesk** se contrae automáticamente en una píldora flotante compacta que muestra el grupo activo y se expande de forma animada al pasar el cursor encima.
+- **Grupo fijado y alternancia rápida (Quick Switch):** Marca cualquier grupo con clic derecho (`Pin`) para tener un botón de acceso directo en el modo mini. Al saltar al grupo fijado, el botón recuerda tu grupo anterior y cambia su icono para permitirte regresar con un solo clic.
+- **Control nativo Win32:**
+  - Filtra automáticamente ventanas ocultas del sistema, procesos en segundo plano (`DWMWA_CLOAKED`) y ventanas pertenecientes a otros escritorios virtuales (`IVirtualDesktopManager`).
+  - Minimiza las ventanas de los grupos inactivos y restaura/enfoca las del grupo seleccionado.
+  - Purga automáticamente las referencias (`HWND`) de ventanas que hayan sido cerradas externamente.
+- **Multi-instancia por escritorio virtual:** Permite ejecutar instancias independientes en distintos escritorios virtuales de Windows sin conflictos de estado.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Arquitectura y Stack Tecnológico
+
+El proyecto sigue una estructura modular basada en **Clean Architecture** y gestión de estado reactiva:
+
+- **Framework:** Flutter Desktop (Windows)
+- **Gestión de estado:** `flutter_bloc` + `equatable`
+- **Integración nativa:** `win32`
+- **Control de ventana:** `window_manager`

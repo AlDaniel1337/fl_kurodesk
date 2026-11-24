@@ -122,6 +122,7 @@ class Win32WindowDatasource {
       ShowWindow(hwnd, SW_MINIMIZE);
     }
   }
+  
 
   void restoreAndFocusWindow(int rawHwnd) {
     final hwnd = HWND(Pointer.fromAddress(rawHwnd));
